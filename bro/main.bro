@@ -32,11 +32,14 @@ function submit(p: Phant::new, data: any): bool
 	{
 	local data_string = convert_to_kv(data);
 	local url = "http://" + p$server + "/input/" + p$public_key;
-
-	return when ( local r = ActiveHTTP::request([$url=url,
-	                                      $method="POST",
-	                                      $client_data=data_string,
-	                                      $addl_curl_args="-H 'Phant-Private-Key: " + p$private_key + "'"]) )
+	# client_data is commented out to work around a bug in the ActiveHTTP module.
+	# The data is submitted through stdin to curl with "-d -", but according to
+	# the curl docs, it needs to submitted like this: "-d @-"
+	local req = ActiveHTTP::Request($url=url,
+	                                $method="POST",
+	                                #$client_data=data_string,
+	                                $addl_curl_args="-d '" + data_string + "' -H 'Phant-Private-Key: " + p$private_key + "'");
+	return when ( local r =  ActiveHTTP::request(req) )
 		{
 		return r$body[0] == "1";
 		}
